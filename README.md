@@ -1,1 +1,2 @@
-# wave-function-collapse-js
+# Wave Function Collapse in JS
+A simple JS implementation of the Wave Function Collapse algorithm.
