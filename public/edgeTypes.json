@@ -1,0 +1,10 @@
+[
+    {
+        "name": "normal",
+        "color": "#00a0b0"
+    },
+    {
+        "name": "special",
+        "color": "#edc951"
+    }
+]

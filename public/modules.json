@@ -1,0 +1,87 @@
+[
+    {
+        "name": "1way_endcap",
+        "edgeTypes": {
+            "+X": "normal"
+        },
+        "weight": 0.5
+    },
+    {
+        "name": "2way",
+        "edgeTypes": {
+            "+X": "normal",
+            "-X": "normal"
+        },
+        "weight": 2
+    },
+    {
+        "name": "2way_normal2special",
+        "edgeTypes": {
+            "+X": "normal",
+            "-X": "special"
+        },
+        "weight": 1
+    },
+    {
+        "name": "2way_special",
+        "edgeTypes": {
+            "+X": "special",
+            "-X": "special"
+        },
+        "weight": 1
+    },
+    {
+        "name": "2way_corner",
+        "edgeTypes": {
+            "+X": "normal",
+            "+Y": "normal"
+        },
+        "weight": 1
+    },
+    {
+        "name": "2way_special",
+        "edgeTypes": {
+            "+X": "special",
+            "+Y": "special"
+        },
+        "weight": 1
+    },
+    {
+        "name": "3way",
+        "edgeTypes": {
+            "+X": "normal",
+            "+Y": "normal",
+            "-X": "normal"
+        },
+        "weight": 0.5
+    },
+    {
+        "name": "3way_special",
+        "edgeTypes": {
+            "+X": "special",
+            "+Y": "special",
+            "-X": "special"
+        },
+        "weight": 0.5
+    },
+    {
+        "name": "4way",
+        "edgeTypes": {
+            "+X": "normal",
+            "+Y": "normal",
+            "-X": "normal",
+            "-Y": "normal"
+        },
+        "weight": 0.5
+    },
+    {
+        "name": "4way_special",
+        "edgeTypes": {
+            "+X": "special",
+            "+Y": "special",
+            "-X": "special",
+            "-Y": "special"
+        },
+        "weight": 0.5
+    }
+]
