@@ -1,8 +1,17 @@
 # Wave Function Collapse in JS
-A simple JS implementation of the Wave Function Collapse algorithm. You can try this in your browser [here](https://wave-function-collapse.herokuapp.com/).
+A simple JS implementation of the Wave Function Collapse algorithm.
 
 ## Example output
 ![Preview](meta/preview.png)
+
+## Try it
+You can try this in the browser [here](https://wave-function-collapse.herokuapp.com/), or clone the repository and run it yourself:
+1. Install [Node.js](https://nodejs.org/en/)
+2. Clone this repository
+3. In the cloned repository folder, open a command prompt or PowerShell prompt and type `npm install` to install dependencies
+4. Type `npm start` to run the webserver
+5. Open a browser and type `localhost:3000` into the URL bar
+
 
 ## How it works
 This is a tiled model implementation, i.e. there are tiles that have adjacency constraints and the algorithm tries to place tiles such that those constraints are met. The algorithm itself is pretty straightforward:
