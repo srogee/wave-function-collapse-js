@@ -12,6 +12,11 @@ You can try this in the browser [here](https://wave-function-collapse.herokuapp.
 4. Type `npm start` to run the webserver
 5. Open a browser and type `localhost:3000` into the URL bar
 
+## Parameters
+The following query parameters are supported (just add them to the end of the URL):
+- `lagTime` (float): The time in milliseconds we should wait between algorithm iterations. Default is `0`.
+- `enableDebugLines` (boolean): If we should show grid lines/edge colors. Default is `false`.
+- `seed` (integer): The seed controlling the output of the algorithm. Default is a random integer.
 
 ## How it works
 This is a tiled model implementation, i.e. there are tiles that have adjacency constraints and the algorithm tries to place tiles such that those constraints are met. The algorithm itself is pretty straightforward:
