@@ -1,39 +1,35 @@
-// Get parameters from the URL and set reasonable defaults if needed
-function getParameters() {
-    var params = {};
-    const urlParams = new URLSearchParams(window.location.search);
-
-    params.seed = parseInt(urlParams.get('seed'));
-    if (WFC.Utils.isNumber(params.seed)) {
-        console.log(`Using parsed seed ${params.seed}`);
-    } else {
-        params.seed = Math.floor(Math.random() * 100000000);
-        console.log(`Using random seed ${params.seed}`);
-    }
-
-    params.lagTime = parseFloat(urlParams.get('lagTime'));
-    if (WFC.Utils.isNumber(params.lagTime)) {
-        console.log(`Using parsed lag time ${params.lagTime}ms`);
-    } else {
-        params.lagTime = 0;
-        console.log(`Using default lag time ${params.lagTime}ms`);
-    }
-
-    params.enableDebugLines = WFC.Utils.parseBoolean(urlParams.get('enableDebugLines'));
-    if (params.enableDebugLines != null) {
-        console.log(`Using parsed enable debug lines ${params.enableDebugLines}`);
-    } else {
-        params.enableDebugLines = false;
-        console.log(`Using default enable debug lines ${params.enableDebugLines}`);
-    }
-
-    return params;
+function updateCamera() {
+    var size = Math.max(params.getParameterValue('dimensions').x, params.getParameterValue('dimensions').y);
+    var width = window.innerWidth / window.innerHeight * (size + 1);
+    var height = (size + 1);
+    camera.left = width / - 2;
+    camera.right = width / 2;
+    camera.top = height / 2;
+    camera.bottom = height / - 2;
+    camera.updateProjectionMatrix();
 }
 
-const params = getParameters();
+function loadTexture(url) {
+    if (!textureCache.has(url)) {
+        textureCache.set(url, new THREE.TextureLoader().load( url ));
+    }
 
+    return textureCache.get(url);
+}
+
+let params = new ParamLoader();
+params.loadParameter("lagTime", ParamType.Float, 0, 0);
+params.loadParameter("enableDebugLines", ParamType.Boolean, false);
+params.loadParameter("seed", ParamType.Integer, Math.floor(Math.random() * 100000000), 0);
+params.loadParameter("xSize", ParamType.Float, 25, 0);
+params.loadParameter("ySize", ParamType.Float, 25, 0);
+params.aliasParameter("dimensions", new WFC.Vector3(params.getParameterValue("xSize"), params.getParameterValue("ySize"), 1))
+
+let textureCache = new Map();
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+const camera = new THREE.OrthographicCamera(0, 0, 0, 0, 0, 100); //new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+updateCamera();
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setClearColor("#4f372d");
@@ -43,17 +39,14 @@ document.body.appendChild( renderer.domElement );
 // Adjust the renderer size as necessary when the window is resized
 window.addEventListener( 'resize', onWindowResize, false );
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+    updateCamera();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 const pivot = new THREE.Object3D();
-const randomStream = new Math.seedrandom(params.seed);
+const randomStream = new Math.seedrandom(params.getParameterValue("seed"));
 scene.add( pivot );
-
-camera.position.z = 5;
 
 function createWireframeBox(center, size, color) {
     const geometry = new THREE.BoxGeometry(size?.x, size?.y, size?.z);
@@ -107,7 +100,7 @@ async function findBadSeed() {
     while (!generator || generator.state !== WFC.GeneratorState.Conflicted) {
         seed = Math.floor(Math.random() * 100000000);
         stream = new Math.seedrandom(seed);
-        generator = new WFC.TiledModel(data.modules, data.edgeTypes, new WFC.Vector3(5, 5, 1), null, stream);
+        generator = new WFC.TiledModel(data.modules, data.edgeTypes, params.getParameterValue('dimensions'), null, stream);
         
         while (generator.state === WFC.GeneratorState.Running) {
             generator.observe();
@@ -124,7 +117,7 @@ async function findBadSeed() {
 
 async function initialize() {
     var data = await loadJSON([ 'modules', 'edgeTypes' ]);
-    generator = new WFC.TiledModel(data.modules, data.edgeTypes, new WFC.Vector3(5, 5, 1), drawCell, randomStream);
+    generator = new WFC.TiledModel(data.modules, data.edgeTypes, params.getParameterValue('dimensions'), drawCell, randomStream);
     oneIteration();
 }
 
@@ -132,7 +125,7 @@ function oneIteration() {
     if (generator.state === WFC.GeneratorState.Running) {
         generator.observe();
         generator.propagate();
-        setTimeout(oneIteration, params.lagTime);
+        setTimeout(oneIteration, params.getParameterValue("lagTime"));
     } else {
         console.log(generator.state);
     }
@@ -141,7 +134,7 @@ function oneIteration() {
 function drawCell(cell) {
     var center = cell.getAdjustedLocation();
     var flat = generator.dimensions.z === 1;
-    if (params.enableDebugLines) {
+    if (params.getParameterValue("enableDebugLines")) {
         createWireframeBox(center, new THREE.Vector3(1, 1, flat ? 0 : 1), "#69554c");
     }
 
@@ -149,13 +142,13 @@ function drawCell(cell) {
     var texture = config.definition.texture;
     if (texture) {
         var planeGeo = new THREE.PlaneGeometry();
-        var mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load( texture ) }));
+        var mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ map: loadTexture(texture) }));
         mesh.position.set(center.x, center.y, center.z - 0.01);
         mesh.rotation.copy(WFC.ModuleRotation.getLocalRotation(config.rotation, config.definition.rotationOffset));
         pivot.add(mesh);
     }
 
-    if (params.enableDebugLines) {
+    if (params.getParameterValue("enableDebugLines")) {
         for (var dir of WFC.EdgeDirection.values) {
             var edgeType = config.getEdgeType(dir);
             if (edgeType) {

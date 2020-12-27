@@ -288,6 +288,10 @@ WFC.Vector3 = class Vector3 {
         }
         return new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
     }
+
+    toString() {
+        return `(${this.x}, ${this.y}, ${this.z})`;
+    }
 }
 
 // Various utility functions
@@ -364,16 +368,6 @@ WFC.Utils = class Utils {
 
     static degreesToRadians(degrees) {
         return degrees * Math.PI / 180;
-    }
-
-    static parseBoolean(str) {
-        if (str === 'true') {
-            return true;
-        } else if (str === 'false') {
-            return false;
-        } else {
-            return null;
-        }
     }
 }
 

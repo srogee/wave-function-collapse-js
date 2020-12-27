@@ -54,48 +54,5 @@
         },
         "weight": 0.5,
         "texture": "roads/roadTexture_10.png"
-    },
-    {
-        "name": "2way_river",
-        "edgeTypes": {
-            "+X": "river",
-            "-X": "river"
-        },
-        "weight": 0.1,
-        "texture": "roads/roadTexture_49.png",
-        "rotationOffset": 90
-    },
-    {
-        "name": "3way_river",
-        "edgeTypes": {
-            "+X": "river",
-            "+Y": "river",
-            "-X": "river"
-        },
-        "weight": 0.05,
-        "texture": "roads/roadTexture_58.png",
-        "rotationOffset": 90
-    },
-    {
-        "name": "2way_corner_soft_river",
-        "edgeTypes": {
-            "+X": "river",
-            "+Y": "river"
-        },
-        "weight": 0.1,
-        "texture": "roads/roadTexture_76.png",
-        "rotationOffset": 90
-    },
-    {
-        "name": "4way_river_road",
-        "edgeTypes": {
-            "+X": "normal",
-            "+Y": "river",
-            "-X": "normal",
-            "-Y": "river"
-        },
-        "weight": 0.1,
-        "texture": "roads/roadTexture_84.png",
-        "rotationOffset": 90
     }
 ]
