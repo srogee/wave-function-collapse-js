@@ -1,9 +1,6 @@
 # Wave Function Collapse in JS
 A simple JS implementation of the Wave Function Collapse algorithm.
 
-## Example output
-![Preview](meta/preview.png)
-
 ## Try it
 You can try this in the browser [here](https://wave-function-collapse.herokuapp.com/), or clone the repository and run it yourself:
 1. Install [Node.js](https://nodejs.org/en/)
@@ -26,3 +23,6 @@ This is a tiled model implementation, i.e. there are tiles that have adjacency c
 3. Pick the cell with the lowest entropy. Choose a tile from its domain based on tile weights and set its domain to only include that tile.
 4. Filter relevant cells' domains to only include tiles that meet adjacency constraints based on the tiles in the neighboring cells' domains.
 5. Repeat steps 3 and 4 until every grid cell has only one tile in its domain (or there is a contradiction, i.e. one or more grid cells have no tiles in their domains).
+
+## Example output
+![Preview](meta/preview.png)
