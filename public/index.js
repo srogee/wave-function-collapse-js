@@ -15,8 +15,16 @@ function getParameters() {
     if (WFC.Utils.isNumber(params.lagTime)) {
         console.log(`Using parsed lag time ${params.lagTime}ms`);
     } else {
-        params.lagTime = 50;
+        params.lagTime = 0;
         console.log(`Using default lag time ${params.lagTime}ms`);
+    }
+
+    params.enableDebugLines = WFC.Utils.parseBoolean(urlParams.get('enableDebugLines'));
+    if (params.enableDebugLines != null) {
+        console.log(`Using parsed enable debug lines ${params.enableDebugLines}`);
+    } else {
+        params.enableDebugLines = false;
+        console.log(`Using default enable debug lines ${params.enableDebugLines}`);
     }
 
     return params;
@@ -133,15 +141,27 @@ function oneIteration() {
 function drawCell(cell) {
     var center = cell.getAdjustedLocation();
     var flat = generator.dimensions.z === 1;
-    createWireframeBox(center, new THREE.Vector3(1, 1, flat ? 0 : 1), "#69554c");
+    if (params.enableDebugLines) {
+        createWireframeBox(center, new THREE.Vector3(1, 1, flat ? 0 : 1), "#69554c");
+    }
 
-    var config = _.sample(cell.domain);
+    var config = cell.domain[0];
+    var texture = config.definition.texture;
+    if (texture) {
+        var planeGeo = new THREE.PlaneGeometry();
+        var mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load( texture ) }));
+        mesh.position.set(center.x, center.y, center.z - 0.01);
+        mesh.rotation.copy(WFC.ModuleRotation.getLocalRotation(config.rotation, config.definition.rotationOffset));
+        pivot.add(mesh);
+    }
 
-    for (var dir of WFC.EdgeDirection.values) {
-        var edgeType = config.getEdgeType(dir);
-        if (edgeType) {
-            var vector = WFC.EdgeDirection.toDirectionVector(dir);
-            createLine(center, WFC.Vector3.add(center, WFC.Vector3.multiply(vector, 0.45)), edgeType.color);
+    if (params.enableDebugLines) {
+        for (var dir of WFC.EdgeDirection.values) {
+            var edgeType = config.getEdgeType(dir);
+            if (edgeType) {
+                var vector = WFC.EdgeDirection.toDirectionVector(dir);
+                createLine(center, WFC.Vector3.add(center, WFC.Vector3.multiply(vector, 0.45)), edgeType.color);
+            }
         }
     }
 }

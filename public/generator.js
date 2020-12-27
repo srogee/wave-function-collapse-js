@@ -189,7 +189,7 @@ WFC.GridCell = class GridCell {
     areModulesOkay(outgoingDirection, a, b) {
         var outgoingEdgeType = a.getEdgeType(outgoingDirection);
         if (!b) {
-            return !outgoingEdgeType; // If no adjacent module, it's okay if we don't have an outgoing edge. Otherwise the edge will go nowhere
+            return !outgoingEdgeType || outgoingEdgeType.canConnectToGridEdge; // If no adjacent module, it's okay if we don't have an outgoing edge. Otherwise the edge will go nowhere
         }
 
         var incomingEdgeType = b.getEdgeType(WFC.EdgeDirection.getOppositeDirection(outgoingDirection));
@@ -361,6 +361,20 @@ WFC.Utils = class Utils {
 
         return choices[index].value;
     }
+
+    static degreesToRadians(degrees) {
+        return degrees * Math.PI / 180;
+    }
+
+    static parseBoolean(str) {
+        if (str === 'true') {
+            return true;
+        } else if (str === 'false') {
+            return false;
+        } else {
+            return null;
+        }
+    }
 }
 
 // Enum for the state of a grid cell
@@ -402,6 +416,22 @@ WFC.ModuleRotation = class ModuleRotation {
                 return WFC.ModuleRotation.Z180;
             case WFC.ModuleRotation.Z270:
                 return WFC.ModuleRotation.Z90;
+        }
+
+        return null;
+    }
+
+    static getLocalRotation(rotation, offset) {
+        offset = offset || 0;
+        switch (rotation) {
+            case WFC.ModuleRotation.Z0:
+                return new THREE.Euler(0, 0, WFC.Utils.degreesToRadians(offset));
+            case WFC.ModuleRotation.Z90:
+                return new THREE.Euler(0, 0, WFC.Utils.degreesToRadians(90 + offset))
+            case WFC.ModuleRotation.Z180:
+                return new THREE.Euler(0, 0, WFC.Utils.degreesToRadians(180 + offset));
+            case WFC.ModuleRotation.Z270:
+                return new THREE.Euler(0, 0, WFC.Utils.degreesToRadians(270 + offset));
         }
 
         return null;
