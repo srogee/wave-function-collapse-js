@@ -112,7 +112,9 @@ WFC.GridCell = class GridCell {
                 if (choice) {
                     this.state = WFC.CellState.Resolved;
                     this.domain = [ choice ];
-                    this.generator.onCellResolve(this);
+                    if (this.generator.onCellResolve) {
+                        this.generator.onCellResolve(this);
+                    }
                     this.flagNeighborsForConstraintUpdates();
                 }
             }

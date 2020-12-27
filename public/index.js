@@ -1,3 +1,29 @@
+// Get parameters from the URL and set reasonable defaults if needed
+function getParameters() {
+    var params = {};
+    const urlParams = new URLSearchParams(window.location.search);
+
+    params.seed = parseInt(urlParams.get('seed'));
+    if (WFC.Utils.isNumber(params.seed)) {
+        console.log(`Using parsed seed ${params.seed}`);
+    } else {
+        params.seed = Math.floor(Math.random() * 100000000);
+        console.log(`Using random seed ${params.seed}`);
+    }
+
+    params.lagTime = parseFloat(urlParams.get('lagTime'));
+    if (WFC.Utils.isNumber(params.lagTime)) {
+        console.log(`Using parsed lag time ${params.lagTime}ms`);
+    } else {
+        params.lagTime = 50;
+        console.log(`Using default lag time ${params.lagTime}ms`);
+    }
+
+    return params;
+}
+
+const params = getParameters();
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
@@ -6,8 +32,8 @@ renderer.setClearColor("#4f372d");
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
+// Adjust the renderer size as necessary when the window is resized
 window.addEventListener( 'resize', onWindowResize, false );
-
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -16,15 +42,7 @@ function onWindowResize() {
 }
 
 const pivot = new THREE.Object3D();
-const urlParams = new URLSearchParams(window.location.search);
-var seed = parseInt(urlParams.get("seed"));
-if (WFC.Utils.isNumber(seed)) {
-    console.log(`Using parsed seed ${seed}`);
-} else {
-    seed = Math.floor(Math.random() * 100000000);
-    console.log(`Using random seed ${seed}`);
-}
-const randomStream = new Math.seedrandom(seed);
+const randomStream = new Math.seedrandom(params.seed);
 scene.add( pivot );
 
 camera.position.z = 5;
@@ -74,7 +92,27 @@ async function loadJSON(pieces) {
 }
 
 var generator = null;
-var lagTime = 50;
+
+async function findBadSeed() {
+    var data = await loadJSON([ 'modules', 'edgeTypes' ]);
+    var seed;
+    while (!generator || generator.state !== WFC.GeneratorState.Conflicted) {
+        seed = Math.floor(Math.random() * 100000000);
+        stream = new Math.seedrandom(seed);
+        generator = new WFC.TiledModel(data.modules, data.edgeTypes, new WFC.Vector3(5, 5, 1), null, stream);
+        
+        while (generator.state === WFC.GeneratorState.Running) {
+            generator.observe();
+            generator.propagate();
+        }
+
+        if (generator.state === WFC.GeneratorState.Conflicted) {
+            console.log(`Conflicted. Seed = ${seed}`);
+        } else {
+            console.log(`OK. Seed = ${seed}`);
+        }
+    }
+}
 
 async function initialize() {
     var data = await loadJSON([ 'modules', 'edgeTypes' ]);
@@ -86,8 +124,7 @@ function oneIteration() {
     if (generator.state === WFC.GeneratorState.Running) {
         generator.observe();
         generator.propagate();
-
-        setTimeout(oneIteration, lagTime);
+        setTimeout(oneIteration, params.lagTime);
     } else {
         console.log(generator.state);
     }
@@ -109,4 +146,5 @@ function drawCell(cell) {
     }
 }
 
+//findBadSeed();
 initialize();
