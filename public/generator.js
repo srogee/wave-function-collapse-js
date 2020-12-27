@@ -2,7 +2,7 @@ WFC = {};
 
 WFC.TiledModel = class TiledModel {
     // Sets up the generator parameters and propagates initial constraints
-    constructor(modules, edgeTypes, dimensions, onCellResolve) {
+    constructor(modules, edgeTypes, dimensions, onCellResolve, randomStream) {
         this.edgeTypes = edgeTypes;
         var domain = [];
 
@@ -292,7 +292,7 @@ WFC.Vector3 = class Vector3 {
 WFC.Utils = class Utils {
     // Checks if the value is a number or not
     static isNumber(value) {
-        return typeof(value) == 'number';
+        return typeof(value) == 'number' && !isNaN(value) && isFinite(value);
     }
 
     // Converts a vector to a string representation for use as a map key (since two vectors with the same values are not considered
@@ -341,7 +341,7 @@ WFC.Utils = class Utils {
             return null;
         }
 
-        var sample = Math.random() * totalWeight;
+        var sample = randomStream() * totalWeight;
         var previousWeight = 0;
         var nextWeight = 0;
         for (var i = 0; i < choices.length; i++) {

@@ -1,5 +1,9 @@
 [
     {
+        "name": "empty",
+        "weight": 0.2
+    },
+    {
         "name": "1way_endcap",
         "edgeTypes": {
             "+X": "normal"

@@ -16,6 +16,15 @@ function onWindowResize() {
 }
 
 const pivot = new THREE.Object3D();
+const urlParams = new URLSearchParams(window.location.search);
+var seed = parseInt(urlParams.get("seed"));
+if (WFC.Utils.isNumber(seed)) {
+    console.log(`Using parsed seed ${seed}`);
+} else {
+    seed = Math.floor(Math.random() * 100000000);
+    console.log(`Using random seed ${seed}`);
+}
+const randomStream = new Math.seedrandom(seed);
 scene.add( pivot );
 
 camera.position.z = 5;
@@ -69,7 +78,7 @@ var lagTime = 50;
 
 async function initialize() {
     var data = await loadJSON([ 'modules', 'edgeTypes' ]);
-    generator = new WFC.TiledModel(data.modules, data.edgeTypes, new WFC.Vector3(5, 5, 1), drawCell);
+    generator = new WFC.TiledModel(data.modules, data.edgeTypes, new WFC.Vector3(5, 5, 1), drawCell, randomStream);
     oneIteration();
 }
 
