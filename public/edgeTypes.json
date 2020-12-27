@@ -2,10 +2,5 @@
     {
         "name": "normal",
         "color": "#edc951"
-    },
-    {
-        "name": "river",
-        "color": "#00a0b0",
-        "canConnectToGridEdge": true
     }
 ]

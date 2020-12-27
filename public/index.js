@@ -150,10 +150,14 @@ function oneIteration() {
             if (largestRegion) {
                 var smallerRegions = regions.filter(region => region !== largestRegion);
                 console.log(`Deleting ${smallerRegions.length} regions`);
-                var emptyTile = generator.defaultDomain[0];
+                var emptyTile = generator.defaultDomain[0]; // This is currently a hack, really we should match the surrounding empty tile type
                 for (var region of smallerRegions) {
                     for (var location of region) {
-                        generator.getCellAt(location).resolveToSpecificConfig(emptyTile);
+                        var cell =generator.getCellAt(location);
+                        if (!cell) {
+                            console.log(location);
+                        }
+                        cell.resolveToSpecificConfig(emptyTile);
                     }
                 }
             }

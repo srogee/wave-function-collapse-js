@@ -87,12 +87,15 @@ WFC.TiledModel = class TiledModel {
     }
 }
 
+// Class holding methods that aren't part of Wave Function Collapse but go hand in hand with it
 WFC.GeneratorExtensions = class GeneratorExtensions {
     constructor(generator) {
         this.generator = generator;
         this.floodFillResults = new Map();
     }
 
+    // Performs a flood fill starting at the specified location using the specified value.
+    // Returns an array of all filled locations matching the value or null if location was already filled.
     performFloodFillForRegionPruning(location, value) {
         var locationKey = WFC.Utils.convertVectorToKey(location);
         if (!this.floodFillResults.has(locationKey)) {
@@ -108,7 +111,7 @@ WFC.GeneratorExtensions = class GeneratorExtensions {
                         if (edgeType) {
                             var neighborLocation = WFC.Vector3.add(currentLocation, WFC.EdgeDirection.toDirectionVector(dir));
                             locationKey = WFC.Utils.convertVectorToKey(neighborLocation);
-                            if (!this.floodFillResults.has(locationKey)) {
+                            if (this.generator.grid.has(locationKey) && !this.floodFillResults.has(locationKey)) {
                                 this.floodFillResults.set(locationKey, value);
                                 queue.push(neighborLocation)
                             } 
@@ -120,27 +123,6 @@ WFC.GeneratorExtensions = class GeneratorExtensions {
 
         var region = [...this.floodFillResults.entries()].filter(entry => entry[1] === value).map(entry => WFC.Utils.convertKeyToVector(entry[0]));
         return region.length > 0 ? region : null;
-        /*
-        Flood-fill (node, target-color, replacement-color):
-        1. If target-color is equal to replacement-color, return.
-        2. If color of node is not equal to target-color, return.
-        3. Set the color of node to replacement-color.
-        4. Set Q to the empty queue.
-        5. Add node to the end of Q.
-        6. While Q is not empty:
-        7.     Set n equal to the first element of Q.
-        8.     Remove first element from Q.
-        9.     If the color of the node to the west of n is target-color,
-                    set the color of that node to replacement-color and add that node to the end of Q.
-        10.     If the color of the node to the east of n is target-color,
-                    set the color of that node to replacement-color and add that node to the end of Q.
-        11.     If the color of the node to the north of n is target-color,
-                    set the color of that node to replacement-color and add that node to the end of Q.
-        12.     If the color of the node to the south of n is target-color,
-                    set the color of that node to replacement-color and add that node to the end of Q.
-        13. Continue looping until Q is exhausted.
-        14. Return.
-        */
     }
 }
 
@@ -178,6 +160,7 @@ WFC.GridCell = class GridCell {
         }
     }
 
+    // Resolve this cell to the specified module configuration, regardless of if it has already been resolved or not.
     resolveToSpecificConfig(config) {
         if (config) {
             this.state = WFC.CellState.Resolved;
@@ -256,7 +239,23 @@ WFC.GridCell = class GridCell {
         }
 
         var incomingEdgeType = b.getEdgeType(WFC.EdgeDirection.getOppositeDirection(outgoingDirection));
-        return outgoingEdgeType === incomingEdgeType; // These modules have the same edge type, we can place them next to each other
+        return this.areEdgeTypesCompatible(outgoingEdgeType, incomingEdgeType); // These modules have compatible edge types, we can place them next to each other
+    }
+
+    // Checks if two edge types are compatible. Typically if they are the same edge type they are,
+    // though edge types can specify the "compatibleWith" property which is an array of the edge
+    // types they are allowed to connect with. This property is useful for when you have an edge
+    // that isn't symmetric when rotated 180 degrees. Using it on the Z axis will lead to undefined
+    // behavior though.
+    areEdgeTypesCompatible(a, b) {
+        if (!a || !b) {
+            return !a && !b;
+        }
+
+        var aComp = a.compatibleWith ?? [ a.name ];
+        var bComp = b.compatibleWith ?? [ b.name ];
+
+        return aComp.includes(b.name) && bComp.includes(a.name);
     }
 }
 
@@ -286,6 +285,7 @@ WFC.ModuleConfiguration = class ModuleConfiguration {
         return null;
     }
 
+    // Returns true if this configuration has no edges (i.e. it is an empty tile)
     hasNoEdges() {
         var edgeTypes = this.definition?.edgeTypes;
         if (edgeTypes && Object.getOwnPropertyNames(edgeTypes).length > 0) {
