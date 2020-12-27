@@ -24,6 +24,7 @@ params.loadParameter("seed", ParamType.Integer, Math.floor(Math.random() * 10000
 params.loadParameter("xSize", ParamType.Float, 25, 0);
 params.loadParameter("ySize", ParamType.Float, 25, 0);
 params.aliasParameter("dimensions", new WFC.Vector3(params.getParameterValue("xSize"), params.getParameterValue("ySize"), 1))
+params.loadParameter("pruneSmallerRegions", ParamType.Boolean, true);
 
 let textureCache = new Map();
 const scene = new THREE.Scene();
@@ -53,7 +54,7 @@ function createWireframeBox(center, size, color) {
     const edges = new THREE.EdgesGeometry( geometry );
     const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: color } ) );
     line.position.set(center.x, center.y, center.z);
-    pivot.add(line);
+    return line;
 }
 
 function createLine(start, end, color) {
@@ -68,7 +69,7 @@ function createLine(start, end, color) {
     const geometry = new THREE.BufferGeometry().setFromPoints( points );
     
     const line = new THREE.Line( geometry, material );
-    pivot.add(line);
+    return line;
 }
 
 function animate() {
@@ -128,14 +129,51 @@ function oneIteration() {
         setTimeout(oneIteration, params.getParameterValue("lagTime"));
     } else {
         console.log(generator.state);
+        if (generator.state === WFC.GeneratorState.Done && params.getParameterValue("pruneSmallerRegions")) {
+            var ext = new WFC.GeneratorExtensions(generator);
+            var regionId;
+            var regions = [];
+            for (var key of generator.grid.keys()) {
+                var location = WFC.Utils.convertKeyToVector(key);
+                var cell = generator.getCellAt(location);
+                if (cell.domain[0].hasNoEdges()) {
+                    continue;
+                }
+                regionId = regions.length;
+                var region = ext.performFloodFillForRegionPruning(location, regionId);
+                if (region) {
+                    regions.push(region);
+                }
+            }
+            
+            var largestRegion = WFC.Utils.getMaximumByPredicate(regions, region => region.length);
+            if (largestRegion) {
+                var smallerRegions = regions.filter(region => region !== largestRegion);
+                console.log(`Deleting ${smallerRegions.length} regions`);
+                var emptyTile = generator.defaultDomain[0];
+                for (var region of smallerRegions) {
+                    for (var location of region) {
+                        generator.getCellAt(location).resolveToSpecificConfig(emptyTile);
+                    }
+                }
+            }
+        }
     }
 }
 
 function drawCell(cell) {
+    if (cell.threeJsData) {
+        for (var obj of cell.threeJsData) {
+            pivot.remove(obj);
+        }
+    }
+
+    cell.threeJsData = [];
+
     var center = cell.getAdjustedLocation();
     var flat = generator.dimensions.z === 1;
     if (params.getParameterValue("enableDebugLines")) {
-        createWireframeBox(center, new THREE.Vector3(1, 1, flat ? 0 : 1), "#69554c");
+        cell.threeJsData.push(createWireframeBox(center, new THREE.Vector3(1, 1, flat ? 0 : 1), "#69554c"));
     }
 
     var config = cell.domain[0];
@@ -145,7 +183,7 @@ function drawCell(cell) {
         var mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ map: loadTexture(texture) }));
         mesh.position.set(center.x, center.y, center.z - 0.01);
         mesh.rotation.copy(WFC.ModuleRotation.getLocalRotation(config.rotation, config.definition.rotationOffset));
-        pivot.add(mesh);
+        cell.threeJsData.push(mesh);
     }
 
     if (params.getParameterValue("enableDebugLines")) {
@@ -153,9 +191,13 @@ function drawCell(cell) {
             var edgeType = config.getEdgeType(dir);
             if (edgeType) {
                 var vector = WFC.EdgeDirection.toDirectionVector(dir);
-                createLine(center, WFC.Vector3.add(center, WFC.Vector3.multiply(vector, 0.45)), edgeType.color);
+                cell.threeJsData.push(createLine(center, WFC.Vector3.add(center, WFC.Vector3.multiply(vector, 0.45)), edgeType.color));
             }
         }
+    }
+
+    for (var obj of cell.threeJsData) {
+        pivot.add(obj);
     }
 }
 

@@ -33,6 +33,8 @@ WFC.TiledModel = class TiledModel {
         // We need to propagate here otherwise we could pick a cell on the edge of the grid and accidentally give it
         // an invalid domain (e.g. have an edge that connects to nothing)
         this.propagate();
+
+        this.defaultDomain = domain;
     }
 
     // Gets the cell at the specified location
@@ -85,6 +87,63 @@ WFC.TiledModel = class TiledModel {
     }
 }
 
+WFC.GeneratorExtensions = class GeneratorExtensions {
+    constructor(generator) {
+        this.generator = generator;
+        this.floodFillResults = new Map();
+    }
+
+    performFloodFillForRegionPruning(location, value) {
+        var locationKey = WFC.Utils.convertVectorToKey(location);
+        if (!this.floodFillResults.has(locationKey)) {
+            this.floodFillResults.set(locationKey, value);
+            var queue = [ location ];
+            while (queue.length > 0) {
+                var currentLocation = queue.splice(0, 1)[0];
+                var cell = this.generator.getCellAt(currentLocation);
+
+                if (cell) {
+                    for (var dir of WFC.EdgeDirection.values) {
+                        var edgeType = cell.domain?.[0]?.getEdgeType(dir);
+                        if (edgeType) {
+                            var neighborLocation = WFC.Vector3.add(currentLocation, WFC.EdgeDirection.toDirectionVector(dir));
+                            locationKey = WFC.Utils.convertVectorToKey(neighborLocation);
+                            if (!this.floodFillResults.has(locationKey)) {
+                                this.floodFillResults.set(locationKey, value);
+                                queue.push(neighborLocation)
+                            } 
+                        }
+                    }
+                }
+            }
+        }
+
+        var region = [...this.floodFillResults.entries()].filter(entry => entry[1] === value).map(entry => WFC.Utils.convertKeyToVector(entry[0]));
+        return region.length > 0 ? region : null;
+        /*
+        Flood-fill (node, target-color, replacement-color):
+        1. If target-color is equal to replacement-color, return.
+        2. If color of node is not equal to target-color, return.
+        3. Set the color of node to replacement-color.
+        4. Set Q to the empty queue.
+        5. Add node to the end of Q.
+        6. While Q is not empty:
+        7.     Set n equal to the first element of Q.
+        8.     Remove first element from Q.
+        9.     If the color of the node to the west of n is target-color,
+                    set the color of that node to replacement-color and add that node to the end of Q.
+        10.     If the color of the node to the east of n is target-color,
+                    set the color of that node to replacement-color and add that node to the end of Q.
+        11.     If the color of the node to the north of n is target-color,
+                    set the color of that node to replacement-color and add that node to the end of Q.
+        12.     If the color of the node to the south of n is target-color,
+                    set the color of that node to replacement-color and add that node to the end of Q.
+        13. Continue looping until Q is exhausted.
+        14. Return.
+        */
+    }
+}
+
 // Class for each cell in a tiled model generator grid
 WFC.GridCell = class GridCell {
     constructor(location, domain, generator) {
@@ -109,20 +168,24 @@ WFC.GridCell = class GridCell {
                     };
                 });
                 var choice = WFC.Utils.pickWeightedRandom(choices);
-                if (choice) {
-                    this.state = WFC.CellState.Resolved;
-                    this.domain = [ choice ];
-                    if (this.generator.onCellResolve) {
-                        this.generator.onCellResolve(this);
-                    }
-                    this.flagNeighborsForConstraintUpdates();
-                }
+                this.resolveToSpecificConfig(choice);
             }
 
             if (this.state !== WFC.CellState.Resolved) {
                 this.state = WFC.CellState.Conflicted;
                 this.generator.state = WFC.GeneratorState.Conflicted;
             }
+        }
+    }
+
+    resolveToSpecificConfig(config) {
+        if (config) {
+            this.state = WFC.CellState.Resolved;
+            this.domain = [ config ];
+            if (this.generator.onCellResolve) {
+                this.generator.onCellResolve(this);
+            }
+            this.flagNeighborsForConstraintUpdates();
         }
     }
 
@@ -221,6 +284,15 @@ WFC.ModuleConfiguration = class ModuleConfiguration {
             return this.generator.edgeTypes.find(edgeType => edgeType.name === edgeTypeName);
         }
         return null;
+    }
+
+    hasNoEdges() {
+        var edgeTypes = this.definition?.edgeTypes;
+        if (edgeTypes && Object.getOwnPropertyNames(edgeTypes).length > 0) {
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -323,6 +395,26 @@ WFC.Utils = class Utils {
             if (value < smallestValue || smallestValue === null) {
                 index = i;
                 smallestValue = value;
+            }
+        }
+
+        if (index < 0) {
+            return null;
+        }
+
+        return array[index];
+    }
+
+    // Gets the array element with the largest value by the specified predicate function
+    static getMaximumByPredicate(array, predicate) {
+        var index = -1;
+        var largestValue = null;
+
+        for (var i = 0; i < array.length; i++) {
+            var value = predicate(array[i], i, array);
+            if (value > largestValue || largestValue === null) {
+                index = i;
+                largestValue = value;
             }
         }
 

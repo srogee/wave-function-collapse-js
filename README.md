@@ -16,6 +16,8 @@ The following parameters are supported. Just add them to the end of the URL (exa
 - `ySize` (integer): The size of the grid along the Y axis. Default is `25`.
 - `lagTime` (float): The time in milliseconds we should wait between algorithm iterations. Default is `0`.
 - `enableDebugLines` (boolean): If we should show grid lines/edge colors. Default is `false`.
+- `pruneSmallerRegions` (boolean): If we should flood fill to find the different regions in the grid, and remove all but the largest region. Default is `true`.
+
 
 ## How it works
 This is a tiled model implementation, i.e. there are tiles that have adjacency constraints and the algorithm tries to place tiles such that those constraints are met. The algorithm itself is pretty straightforward:

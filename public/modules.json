@@ -52,7 +52,7 @@
             "-X": "normal",
             "-Y": "normal"
         },
-        "weight": 0.5,
+        "weight": 0.1,
         "texture": "roads/roadTexture_10.png"
     }
 ]
