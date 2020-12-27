@@ -29,4 +29,4 @@ This is a tiled model implementation, i.e. there are tiles that have adjacency c
 5. Repeat steps 3 and 4 until every grid cell has only one tile in its domain (or there is a contradiction, i.e. one or more grid cells have no tiles in their domains).
 
 ## Example output
-![Preview](meta/preview.png)
+![Preview](meta/preview2.png)
