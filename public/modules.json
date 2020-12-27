@@ -61,7 +61,7 @@
             "+X": "river",
             "-X": "river"
         },
-        "weight": 1,
+        "weight": 0.1,
         "texture": "roads/roadTexture_49.png",
         "rotationOffset": 90
     },
@@ -72,7 +72,7 @@
             "+Y": "river",
             "-X": "river"
         },
-        "weight": 1,
+        "weight": 0.05,
         "texture": "roads/roadTexture_58.png",
         "rotationOffset": 90
     },
@@ -82,7 +82,7 @@
             "+X": "river",
             "+Y": "river"
         },
-        "weight": 1,
+        "weight": 0.1,
         "texture": "roads/roadTexture_76.png",
         "rotationOffset": 90
     },
@@ -94,7 +94,7 @@
             "-X": "normal",
             "-Y": "river"
         },
-        "weight": 1,
+        "weight": 0.1,
         "texture": "roads/roadTexture_84.png",
         "rotationOffset": 90
     }
